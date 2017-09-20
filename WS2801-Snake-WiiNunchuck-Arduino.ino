@@ -2,18 +2,22 @@
 #include <SPI.h>
 #include <Adafruit_WS2801.h>
 
-Adafruit_WS2801 strip = Adafruit_WS2801(152, 3, 2);
+int numberOfLeds = 152; // set the number of your leds
+int clockPin = 3;       // set the clockpin
+int dataPin = 2;        // set the datapin
+int lengthOfField = 19; // set the length of the gamefield
+int widthOfField = 8;   // set the width of the gamefield
 
+
+Adafruit_WS2801 strip = Adafruit_WS2801(numberOfLeds, clockPin, dataPin);
 Wiichuck wii;
 
-int frame[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 37, 38, 56, 57, 75, 76, 94, 95, 113, 114, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151};
-
 int snakelength = 1;
-int x = 4;
-int y = 3;
+int x = 4;          // Start X point
+int y = 3;          // Start Y point
 int snakex[] = {x, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int snakey[] = {y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int view = 4;
+int view = 4;       // rotation
 
 int applex = 4;
 int appley = 6;
@@ -32,9 +36,9 @@ static int cA(int row/*Y*/, int col/*X*/) {
     reversed = 1;
   }
 
-  int base = (col) * 19;
+  int base = (col) * lengthOfField;
   if (reversed) {
-    base += 19 - 1;
+    base += lengthOfField - 1;
   }
   int final = reversed == 1 ? base - row : base + row;
   return final;
@@ -75,7 +79,7 @@ void gameOver() {
 
   //SCORE?
 
-  asm volatile (" jmp 0");
+  asm volatile (" jmp 0");    // restart the arduino
 }
 
 void play() {
@@ -124,13 +128,13 @@ void moove() {
     snakey[1] = y;
   }
 
-  if (view == 0/*rechts*/) {
+  if (view == 0/*right*/) {
     x = x + 1;
-  } else if (view == 1/*links*/) {
+  } else if (view == 1/*left*/) {
     x = x - 1;
-  } else if (view == 2/*hoch*/) {
+  } else if (view == 2/*up*/) {
     y = y + 1;
-  } else if (view == 3/*runter*/) {
+  } else if (view == 3/*down*/) {
     y = y - 1;
   }
 
@@ -163,7 +167,7 @@ void playerEatsApple() {
 }
 
 void checkPlayerDead() {
-  if (y == 0 || y == 18 || x == 0 || x == 7) {
+  if (y == 0 || y == lengthOfField-1 || x == 0 || x == widthOfField-1) {
     gameOver();
   }
 
@@ -190,8 +194,13 @@ void updateDisplay() {
 }
 
 void createFrame(boolean show) {
-  for (int i = 0; i != sizeof(frame) / sizeof(int); i++) {
-    strip.setPixelColor(frame[i], Color(100, 0, 0));
+  for (int i = 0; i!= widthOfField; i++) {           
+    strip.setPixelColor(cA(0,i), Color(100, 0, 0));
+    strip.setPixelColor(cA(lengthOfField,i), Color(100, 0, 0));
+  }
+  for (int i = 0; i!= lengthOfField; i++) {
+    strip.setPixelColor(cA(i,0), Color(100, 0, 0));
+    strip.setPixelColor(cA(i,widthOfField), Color(100, 0, 0));
   }
   if (show) {
     strip.show();
@@ -207,6 +216,8 @@ void fillBlack(boolean show) {
   }
 }
 
+
+/* Helper functions */
 uint32_t Color(byte r, byte g, byte b) {
   uint32_t c;
   c = r;
